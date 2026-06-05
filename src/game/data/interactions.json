@@ -1,0 +1,20 @@
+[
+  {
+    "tileX": 4,
+    "tileY": 9,
+    "type": "sign",
+    "dialog": "HELLO! WELCOME TO VUE TOWN.\n\nENJOY YOUR STAY!"
+  },
+  {
+    "tileX": 15,
+    "tileY": 12,
+    "type": "sign",
+    "dialog": "WARNING: WILD BUGS IN TALL GRASS."
+  },
+  {
+    "tileX": 8,
+    "tileY": 10,
+    "type": "npc",
+    "dialog": "Did you know? Vue and Phaser work great together!"
+  }
+]

@@ -53,6 +53,14 @@ export const useGameStore = defineStore('game', {
     // Pang-update ng controls mula sa MobileGamepad.vue
     setKey(keyName, isPressed) {
       this.keys[keyName] = isPressed;
+    },
+    openDialog(text) {
+      this.dialogText = text;
+      this.currentGameState = 'DIALOG'; // I-freeze ang laro, ipapakita ang Vue Dialog
+    },
+    closeDialog() {
+      this.dialogText = '';
+      this.currentGameState = 'EXPLORING'; // Balik sa paglalakad
     }
   }
 });

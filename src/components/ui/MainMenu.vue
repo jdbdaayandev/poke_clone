@@ -1,4 +1,3 @@
-<!-- src/components/ui/MainMenu.vue -->
 <template>
   <div class="main-menu-container">
     <div class="menu-box">
@@ -7,9 +6,16 @@
           v-for="(option, index) in options" 
           :key="index" 
           :class="['menu-btn', { active: selectedIndex === index }]"
-          @mouseover="selectedIndex = index"
+          @mouseover="hoverOption(index)"
           @click="clickOption(index)"
         >
+          <span 
+            class="cursor" 
+            :class="{ 'cursor-active': selectedIndex === index }"
+            :style="{ visibility: selectedIndex === index ? 'visible' : 'hidden' }"
+          >
+            ▶
+          </span>
           {{ option }}
         </button>
       </div>
@@ -25,48 +31,94 @@ const store = useGameStore();
 const options = ['NEW GAME', 'LOAD GAME', 'OPTION'];
 const selectedIndex = ref(0);
 
+// --- WEB AUDIO API PARA SA MENU SOUNDS ---
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+// Tunog kapag lumilipat ng option (Blip)
+const playBlip = () => {
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.type = 'square'; 
+  osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.05);
+  
+  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+  
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.05);
+};
+
+// Tunog kapag pinindot ang 'Enter' o kinlick (High Ping)
+const playSelect = () => {
+  if (!audioCtx) audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+  
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+  
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.2);
+};
+
+// --- MENU LOGIC ---
 const handleKeys = (e) => {
   if (store.currentGameState !== 'MAIN_MENU') return;
+  
   if (e.key === 'ArrowUp') {
     selectedIndex.value = selectedIndex.value > 0 ? selectedIndex.value - 1 : options.length - 1;
+    playBlip();
   } else if (e.key === 'ArrowDown') {
     selectedIndex.value = selectedIndex.value < options.length - 1 ? selectedIndex.value + 1 : 0;
+    playBlip();
   } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
-    console.log("⌨️ Keyboard Enter/Z pressed on index:", selectedIndex.value);
     executeSelection();
   }
 };
 
+const hoverOption = (index) => {
+  if (selectedIndex.value !== index) {
+    selectedIndex.value = index;
+    playBlip(); // Tutunog din kapag dinaanan ng mouse
+  }
+};
+
 const clickOption = (index) => {
-  // LOG 1: Tingnan kung gumagana ang Touch/Click physical response
-  console.log("🎯 DETECTED: May nag-click/nag-touch sa button:", options[index]);
   selectedIndex.value = index;
   executeSelection();
 };
 
 const executeSelection = () => {
+  playSelect(); // Play select sound
   const choice = options[selectedIndex.value];
-  console.log("🚀 EXECUTING: Pinapagana ang option:", choice);
   
   if (choice === 'NEW GAME') {
-    // LOG 2: Tingnan kung magbabago ang screen papuntang Loading
-    console.log("🟡 STEP 1: Tinatawag ang store.startLoading()...");
     store.startLoading(); 
     
     setTimeout(() => {
-      // LOG 3: Tingnan kung matatapos ang 3 seconds loading
-      console.log("🟢 STEP 2: Tapos na ang 3 seconds delay. Tinatawag ang store.startGame()...");
       store.startGame(); 
-      
-      // LOG 4: I-tsek kung kilala ba ng Vue si Phaser
       if (window.phaserGame) {
-        console.log("🔵 STEP 3: Nahanap si window.phaserGame! Inililipat ang scene sa Overworld...");
         window.phaserGame.scene.start('OverworldScene');
-      } else {
-        console.error("❌ ERROR: Hindi nahanap si window.phaserGame sa window object!");
       }
     }, 3000);
   } else {
+    // Pang-placeholder kung ano mangyayari sa iba
     alert("Pinili mo ang: " + choice);
   }
 };
@@ -76,39 +128,82 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeys));
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .main-menu-container {
   position: absolute; 
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: #1d7a5b; 
-  display: flex; justify-content: center; align-items: center; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background-color: #1d7a5b; /* Seamless sa background ng StartScreen */
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
   z-index: 2900;
-  pointer-events: auto !important; /* Pinupuwersang maging clickable ang buong area */
+  pointer-events: auto !important; 
 }
 
+/* Authentic GBA Text Box Styling (Emerald/FireRed style) */
 .menu-box {
-  background: #2c4356; 
-  border: 4px solid #ffffff; border-radius: 12px;
-  padding: 25px; min-width: 260px; box-shadow: 6px 6px 0px #000;
+  background: #ffffff; 
+  border: 4px solid #5a5a5a; /* Outer border */
+  border-radius: 12px;
+  padding: 30px 40px; 
+  min-width: 320px; 
+  /* Patong-patong na shadow para magkaroon ng inner outline at kapal */
+  box-shadow: 
+    inset 0 0 0 4px #d8d8d8, /* Inner light-gray border */
+    inset 0 0 0 6px #ffffff, /* Gap */
+    6px 6px 0px rgba(0,0,0,0.3); /* Drop shadow ng buong box */
   user-select: none;
   pointer-events: auto !important;
 }
 
 .button-group {
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex; 
+  flex-direction: column; 
+  gap: 20px; 
   pointer-events: auto !important;
 }
 
+/* Text Buttons */
 .menu-btn {
-  background-color: #3e5f7a; color: white;
-  font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: bold;
-  padding: 12px 20px; border: 2px solid #ffffff; border-radius: 8px;
-  cursor: pointer; text-align: center;
-  box-shadow: 2px 2px 0px #000;
-  pointer-events: auto !important; /* Siguradong tatanggap ng click ang bawat button */
+  background-color: transparent; 
+  color: #666666; /* Grayed out kapag hindi active */
+  font-family: 'Press Start 2P', monospace; 
+  font-size: 18px; 
+  border: none; 
+  cursor: pointer; 
+  text-align: left;
+  display: flex;
+  align-items: center;
+  pointer-events: auto !important; 
+  outline: none;
+  transition: color 0.1s;
 }
 
-.menu-btn:hover, .menu-btn.active {
-  background-color: #ffcc00; color: #000000; border-color: #000000;
-  transform: translateY(-2px); box-shadow: 4px 4px 0px #000;
+.menu-btn.active {
+  color: #000000; /* Magiging pure black ang text kapag nakatutok ang cursor */
+  text-shadow: 1px 1px 0px #cccccc; /* Subtle drop shadow sa active text */
+}
+
+/* Styling at Animation para sa Cursor */
+.cursor {
+  color: #ff3300; /* Classic Red-Orange cursor */
+  margin-right: 15px;
+  font-size: 18px;
+  display: inline-block; /* Kailangan ito para gumana ang transform */
+}
+
+/* Gumagalaw na arrow effect */
+.cursor-active {
+  animation: pointerBounce 0.4s infinite alternate ease-in-out;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes pointerBounce {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(6px); } /* Aatras at aabante */
 }
 </style>

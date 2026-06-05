@@ -13,16 +13,27 @@ export default class Player extends Phaser.GameObjects.Sprite {
     this.setScale(2);
     this.setOrigin(0.5, 0.8);
 
-    this.cursors = scene.input.keyboard.createCursorKeys();
+    // --- KEYBOARD INPUTS ---
+    this.cursors = scene.input.keyboard.createCursorKeys(); // Arrow Keys
+    
+    // DAGDAG: WASD Keys support
+    this.wasd = scene.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D
+    });
     
     this.tileSize = 32;
     this.isMoving = false;
     this.moveSpeed = 250;
 
-    // --- BAGONG VARIABLES PARA SA TURN DELAY ---
+    // --- VARIABLES PARA SA TURN DELAY ---
     this.currentDirection = 'down'; // Default na nakaharap pababa
     this.moveDelayTimer = 0;        // Timer para sa delay bago maglakad
-    this.turnDelay = 100;           // 100 milliseconds delay bago gumalaw (adjust mo kung kailangan)
+    this.turnDelay = 120;           // 100 milliseconds delay bago gumalaw (adjust mo kung kailangan)
+
+    this.continuousWalk = false;
 
     // --- ANIMATIONS ---
     scene.anims.create({
@@ -54,7 +65,6 @@ export default class Player extends Phaser.GameObjects.Sprite {
   }
 
   update() {
-    // Kung naglalakad pa, i-ignore ang inputs
     if (this.isMoving) return;
 
     const store = useGameStore();
@@ -63,13 +73,11 @@ export default class Player extends Phaser.GameObjects.Sprite {
     let targetX = this.x;
     let targetY = this.y;
 
-   // Basahin parehas ang KEYBOARD at MOBILE D-PAD (store.keys)
-    if (this.cursors.left.isDown || store.keys.left) intendedDirection = 'left';
-    else if (this.cursors.right.isDown || store.keys.right) intendedDirection = 'right';
-    else if (this.cursors.up.isDown || store.keys.up) intendedDirection = 'up';
-    else if (this.cursors.down.isDown || store.keys.down) intendedDirection = 'down';
+    if (this.cursors.left.isDown || this.wasd.left.isDown || store.keys.left) intendedDirection = 'left';
+    else if (this.cursors.right.isDown || this.wasd.right.isDown || store.keys.right) intendedDirection = 'right';
+    else if (this.cursors.up.isDown || this.wasd.up.isDown || store.keys.up) intendedDirection = 'up';
+    else if (this.cursors.down.isDown || this.wasd.down.isDown || store.keys.down) intendedDirection = 'down';
 
-    // (Ipagpatuloy ang existing na movement code mo sa baba...)
     if (intendedDirection === 'left') targetX -= this.tileSize;
     else if (intendedDirection === 'right') targetX += this.tileSize;
     else if (intendedDirection === 'up') targetY -= this.tileSize;
@@ -79,15 +87,22 @@ export default class Player extends Phaser.GameObjects.Sprite {
       if (this.currentDirection !== intendedDirection) {
         this.currentDirection = intendedDirection;
         this.faceDirection(this.currentDirection); 
-        this.moveDelayTimer = this.scene.time.now + this.turnDelay;
-      } 
-      else {
-        if (this.scene.time.now >= this.moveDelayTimer) {
-          this.play(`walk-${this.currentDirection}`, true);
-          this.tryMoveTo(targetX, targetY);
+        
+        // KUNG HINDI PA NAGLALAKAD, LAGYAN NG DELAY (Para sa '1-click tap to turn')
+        if (!this.continuousWalk) {
+          this.moveDelayTimer = this.scene.time.now + this.turnDelay;
         }
+      } 
+      
+      // KUNG TAPOS NA ANG DELAY, o TULOY-TULOY NA ANG LAKAD, GO!
+      if (this.scene.time.now >= this.moveDelayTimer || this.continuousWalk) {
+        this.continuousWalk = true; // Markahan na naglalakad na
+        this.play(`walk-${this.currentDirection}`, true);
+        this.tryMoveTo(targetX, targetY);
       }
     } else {
+      // Kapag binitawan lahat ng keys, huminto at i-reset
+      this.continuousWalk = false;
       this.stopAndIdle();
     }
   }
@@ -110,6 +125,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
 
   moveTo(targetX, targetY) {
     this.isMoving = true;
+    const store = useGameStore(); 
 
     this.scene.tweens.add({
       targets: this,
@@ -119,15 +135,19 @@ export default class Player extends Phaser.GameObjects.Sprite {
       onComplete: () => {
         this.isMoving = false;
         
-        if (!this.cursors.left.isDown && !this.cursors.right.isDown && 
-            !this.cursors.up.isDown && !this.cursors.down.isDown) {
+        const isLeftPressed = this.cursors.left.isDown || this.wasd.left.isDown || store.keys.left;
+        const isRightPressed = this.cursors.right.isDown || this.wasd.right.isDown || store.keys.right;
+        const isUpPressed = this.cursors.up.isDown || this.wasd.up.isDown || store.keys.up;
+        const isDownPressed = this.cursors.down.isDown || this.wasd.down.isDown || store.keys.down;
+
+        if (!isLeftPressed && !isRightPressed && !isUpPressed && !isDownPressed) {
+             this.continuousWalk = false; // I-reset ang state
              this.stopAndIdle();
         }
       }
     });
   }
 
-  // --- BAGONG HELPER METHOD: Para i-set ang tamang idle frame ---
   faceDirection(direction) {
     this.anims.stop();
     if (direction === 'down') this.setFrame(0);
