@@ -3,10 +3,15 @@ import { defineStore } from 'pinia';
 
 export const useGameStore = defineStore('game', {
   state: () => ({
-    // Ang mga posibleng state: 'EXPLORING', 'BATTLING', 'DIALOG', 'MENU'
-    currentGameState: 'EXPLORING', 
+    // Dinagdag natin ang 'START_SCREEN' sa mga posibleng state
+    // At ginawa natin itong default na state kapag nag-load ang page
+    currentGameState: 'START_SCREEN', 
   }),
   actions: {
+    // Bagong action para mag-umpisa ang laro
+    startGame() {
+      this.currentGameState = 'EXPLORING';
+    },
     startBattle() {
       this.currentGameState = 'BATTLING';
     },

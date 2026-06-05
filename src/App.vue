@@ -8,6 +8,7 @@ import GameWrapper from './components/GameWrapper.vue';
 import BattleMenu from './components/ui/BattleMenu.vue';
 import DialogBox from './components/ui/DialogBox.vue';
 import MainMenu from './components/ui/MainMenu.vue';
+import StartScreen from './components/ui/StartScreen.vue';
 
 // Kunin ang global state mula sa Pinia
 const gameStore = useGameStore();
@@ -26,6 +27,8 @@ const { currentGameState } = storeToRefs(gameStore);
     <!-- 2. THE UI LAYER -->
     <!-- Dito pumapasok ang Vue. Magpapakita lang ng UI depende sa Pinia state -->
     <div class="ui-overlay" :class="{ 'pointer-events-none': currentGameState === 'EXPLORING' }">
+
+      <StartScreen v-if="currentGameState === 'START_SCREEN'" />
       
       <!-- Magpapakita lang kapag may wild encounter -->
       <BattleMenu v-if="currentGameState === 'BATTLING'" />

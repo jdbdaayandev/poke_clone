@@ -13,8 +13,8 @@ export default class OverworldScene extends Scene {
     const collisionLayer = map.createLayer('Collission', tileset, 0, 0); 
     const overheadLayer = map.createLayer('Overhead', tileset, 0, 0);
 
-    groundLayer?.setScale(2).setDepth(0);
-    collisionLayer?.setScale(2).setDepth(1);
+    groundLayer?.setScale(2).setDepth(0);// I-SET TO VISIBLE FALSE PARA MAGING INVISIBLE ANG WHITE BLOCKS
+    collisionLayer.setScale(2).setDepth(1).setVisible(false);
     overheadLayer?.setScale(2).setDepth(3);
 
     // TANGGALIN NA ITO: collisionLayer.setCollisionByExclusion([-1]);
