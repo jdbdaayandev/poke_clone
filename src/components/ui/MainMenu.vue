@@ -1,22 +1,18 @@
 <!-- src/components/ui/MainMenu.vue -->
 <template>
-  <div v-if="store.currentGameState === 'MAIN_MENU'" class="main-menu-container">
-    <!-- Pinwersa nating maging clickable ang mismong menu box -->
+  <div class="main-menu-container">
     <div class="menu-box">
-      <ul>
-        <!-- Ginamit natin ang @click para selyado sa PC mouse at Phone touch screen -->
-        <li 
+      <div class="button-group">
+        <button 
           v-for="(option, index) in options" 
           :key="index" 
-          :class="{ active: selectedIndex === index }"
+          :class="['menu-btn', { active: selectedIndex === index }]"
           @mouseover="selectedIndex = index"
           @click="clickOption(index)"
         >
-          <span v-if="selectedIndex === index" class="cursor">▶</span>
-          <span v-else class="spacer">&nbsp;&nbsp;</span>
           {{ option }}
-        </li>
-      </ul>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -29,7 +25,6 @@ const store = useGameStore();
 const options = ['NEW GAME', 'LOAD GAME', 'OPTION'];
 const selectedIndex = ref(0);
 
-// Keyboard controls para kung gusto gamitin ang keyboard ng PC
 const handleKeys = (e) => {
   if (store.currentGameState !== 'MAIN_MENU') return;
   if (e.key === 'ArrowUp') {
@@ -37,31 +32,42 @@ const handleKeys = (e) => {
   } else if (e.key === 'ArrowDown') {
     selectedIndex.value = selectedIndex.value < options.length - 1 ? selectedIndex.value + 1 : 0;
   } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
+    console.log("⌨️ Keyboard Enter/Z pressed on index:", selectedIndex.value);
     executeSelection();
   }
 };
 
-// Touch Screen / Mouse Click trigger
 const clickOption = (index) => {
+  // LOG 1: Tingnan kung gumagana ang Touch/Click physical response
+  console.log("🎯 DETECTED: May nag-click/nag-touch sa button:", options[index]);
   selectedIndex.value = index;
   executeSelection();
 };
 
 const executeSelection = () => {
   const choice = options[selectedIndex.value];
+  console.log("🚀 EXECUTING: Pinapagana ang option:", choice);
   
   if (choice === 'NEW GAME') {
-    store.startLoading(); // Pasok sa Pikachu loading screen
+    // LOG 2: Tingnan kung magbabago ang screen papuntang Loading
+    console.log("🟡 STEP 1: Tinatawag ang store.startLoading()...");
+    store.startLoading(); 
     
     setTimeout(() => {
-      store.startGame(); // Pasok sa mismong overworld map
+      // LOG 3: Tingnan kung matatapos ang 3 seconds loading
+      console.log("🟢 STEP 2: Tapos na ang 3 seconds delay. Tinatawag ang store.startGame()...");
+      store.startGame(); 
+      
+      // LOG 4: I-tsek kung kilala ba ng Vue si Phaser
       if (window.phaserGame) {
-        const currentScene = window.phaserGame.scene.getScenes(true)[0];
-        if (currentScene) currentScene.scene.start('OverworldScene');
+        console.log("🔵 STEP 3: Nahanap si window.phaserGame! Inililipat ang scene sa Overworld...");
+        window.phaserGame.scene.start('OverworldScene');
+      } else {
+        console.error("❌ ERROR: Hindi nahanap si window.phaserGame sa window object!");
       }
     }, 3000);
   } else {
-    alert("Pinili mo ang: " + choice + " (Wala pa itong function sa ngayon)");
+    alert("Pinili mo ang: " + choice);
   }
 };
 
@@ -72,62 +78,37 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeys));
 <style scoped>
 .main-menu-container {
   position: absolute; 
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  height: 100%;
+  top: 0; left: 0; width: 100%; height: 100%;
   background-color: #1d7a5b; 
-  display: flex; 
-  justify-content: center; 
-  align-items: center; 
+  display: flex; justify-content: center; align-items: center; 
   z-index: 2900;
-  pointer-events: auto !important; /* Siguraduhing buhay ang clicks sa container */
+  pointer-events: auto !important; /* Pinupuwersang maging clickable ang buong area */
 }
 
 .menu-box {
-  background: #3e5f7a; 
-  border: 4px solid #ffffff; 
-  border-radius: 8px;
-  padding: 20px 30px; 
-  min-width: 220px; 
-  box-shadow: 4px 4px 0px #000;
+  background: #2c4356; 
+  border: 4px solid #ffffff; border-radius: 12px;
+  padding: 25px; min-width: 260px; box-shadow: 6px 6px 0px #000;
   user-select: none;
-  pointer-events: auto !important; /* Puwersahing tanggapin ang click/touch ng mouse at daliri */
+  pointer-events: auto !important;
 }
 
-ul { 
-  list-style: none; 
-  padding: 0; 
-  margin: 0; 
+.button-group {
+  display: flex; flex-direction: column; gap: 12px;
+  pointer-events: auto !important;
 }
 
-li { 
-  color: white; 
-  font-family: 'Courier New', Courier, monospace; 
-  font-size: 24px; 
-  padding: 8px 0; 
-  font-weight: bold; 
-  cursor: pointer; 
-  transition: padding-left 0.1s ease;
-  pointer-events: auto !important; /* Double-check para sa bawat item */
+.menu-btn {
+  background-color: #3e5f7a; color: white;
+  font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: bold;
+  padding: 12px 20px; border: 2px solid #ffffff; border-radius: 8px;
+  cursor: pointer; text-align: center;
+  box-shadow: 2px 2px 0px #000;
+  pointer-events: auto !important; /* Siguradong tatanggap ng click ang bawat button */
 }
 
-li:hover { 
-  color: #ffcc00; 
-  padding-left: 5px; 
-}
-
-.cursor { 
-  color: #ffcc00; 
-  margin-right: 10px; 
-}
-
-.spacer { 
-  display: inline-block; 
-  width: 24px; 
-}
-
-.active { 
-  color: #ffcc00 !important; 
+.menu-btn:hover, .menu-btn.active {
+  background-color: #ffcc00; color: #000000; border-color: #000000;
+  transform: translateY(-2px); box-shadow: 4px 4px 0px #000;
 }
 </style>
