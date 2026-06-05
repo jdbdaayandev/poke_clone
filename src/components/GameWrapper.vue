@@ -1,4 +1,3 @@
-<!-- src/components/GameWrapper.vue -->
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import Phaser from 'phaser';
@@ -22,12 +21,21 @@ const store = useGameStore();
 onMounted(() => {
   const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
     parent: gameContainer.value,
     backgroundColor: '#000000',
     pixelArt: true, 
     audio: { noAudio: true },
+    
+    // ==========================================
+    // BAGONG SCALE CONFIG: Dito ginagawa ang magic!
+    // ==========================================
+    scale: {
+      mode: Phaser.Scale.FIT, // I-fi-fit ang canvas sa loob ng wrapper nang hindi nasisira ang hugis
+      autoCenter: Phaser.Scale.CENTER_BOTH, // Laging gitna
+      width: 800, // Base internal resolution (Width)
+      height: 600 // Base internal resolution (Height)
+    },
+    
     physics: {
       default: 'arcade', 
       arcade: { gravity: { y: 0 }, debug: true }
@@ -46,18 +54,14 @@ onUnmounted(() => {
 
 <template>
   <div class="app-wrapper">
-    <!-- Phaser Game Canvas (Nasa Ilalim) -->
     <div ref="gameContainer" class="game-container"></div>
 
-    <!-- UI LAYER (Nasa Ibabaw) -->
-    <!-- Magdadagdag tayo ng 'in-game' class kapag ang state ay EXPLORING na -->
     <div :class="['ui-layer', { 'in-game': store.currentGameState === 'EXPLORING' }]">
       <IntroScreen v-if="store.currentGameState === 'INTRO'" />
       <StartScreen v-if="store.currentGameState === 'START_SCREEN'" />
       <MainMenu v-if="store.currentGameState === 'MAIN_MENU'" />
       <LoadingScreen v-if="store.currentGameState === 'LOADING'" />
       <PartyMenu v-if="store.currentGameState === 'MENU'" />
-      <MobileGamepad v-if="store.currentGameState === 'EXPLORING'" />
     </div>
   </div>
 </template>
@@ -65,10 +69,12 @@ onUnmounted(() => {
 <style scoped>
 .app-wrapper {
   position: relative;
-  width: 800px; 
-  height: 600px; 
+  /* BINAGO: Imbes na 800px at 600px, susunod na ito sa sukat ng parent div (yung nasa App.vue) */
+  width: 100%; 
+  height: 100%; 
   margin: 0 auto; 
 }
+
 .game-container {
   width: 100%;
   height: 100%;
@@ -81,17 +87,15 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 99999 !important; /* Puwersahing lumutang sa pinaka-ibabaw ng Phaser */
-  pointer-events: auto; /* BY DEFAULT: Clickable lahat ng menu! Hindi makaka-epal ang Phaser */
+  z-index: 99999 !important; 
+  pointer-events: auto; 
 }
 
 /* KAPAG NAGLALAKAD NA SA MAPA (EXPLORING): */
-/* Dito lang natin gagawing 'none' ang background para makalusot ang galaw ng character sa Phaser */
 .ui-layer.in-game {
   pointer-events: none !important;
 }
 
-/* Pero siguraduhing clickable pa rin ang mismong buttons ng Mobile D-pad kahit naka-lock ang laro */
 .ui-layer > * {
   pointer-events: auto;
 }

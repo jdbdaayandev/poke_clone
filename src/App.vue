@@ -1,61 +1,55 @@
-<!-- src/App.vue -->
 <script setup>
 import { storeToRefs } from 'pinia';
 import { useGameStore } from './stores/gameStore';
 
-// Import ng iyong mga Components
 import GameWrapper from './components/GameWrapper.vue';
 import BattleMenu from './components/ui/BattleMenu.vue';
 import DialogBox from './components/ui/DialogBox.vue';
 import MainMenu from './components/ui/MainMenu.vue';
 import StartScreen from './components/ui/StartScreen.vue';
+// 1. I-IMPORT ANG MOBILE GAMEPAD
+import MobileGamepad from './components/ui/MobileGamepad.vue'; 
 
-// Kunin ang global state mula sa Pinia
 const gameStore = useGameStore();
-
-// Ginagamit natin ang storeToRefs para manatiling reactive ang state sa template
 const { currentGameState } = storeToRefs(gameStore);
 </script>
 
 <template>
   <main class="app-container">
     
-    <!-- 1. THE GAME ENGINE -->
-    <!-- Dito tatakbo ang Phaser 3 canvas. Palagi itong naka-render sa background. -->
-    <GameWrapper />
+    <div class="emulator-layout">
+      
+      <div class="game-frame">
+        
+        <GameWrapper />
 
-    <!-- 2. THE UI LAYER -->
-    <!-- Dito pumapasok ang Vue. Magpapakita lang ng UI depende sa Pinia state -->
-    <div class="ui-overlay" :class="{ 'pointer-events-none': currentGameState === 'EXPLORING' }">
+        <div class="ui-overlay" :class="{ 'pointer-events-none': currentGameState === 'EXPLORING' }">
+          <StartScreen v-if="currentGameState === 'START_SCREEN'" />
+          <BattleMenu v-if="currentGameState === 'BATTLING'" />
+          <DialogBox v-if="currentGameState === 'DIALOG'" />
+          <MainMenu v-if="currentGameState === 'MENU'" />
+        </div>
 
-      <StartScreen v-if="currentGameState === 'START_SCREEN'" />
-      
-      <!-- Magpapakita lang kapag may wild encounter -->
-      <BattleMenu v-if="currentGameState === 'BATTLING'" />
-      
-      <!-- Magpapakita kapag kumakausap ng NPC o may binabasang sign -->
-      <DialogBox v-if="currentGameState === 'DIALOG'" />
-      
-      <!-- Magpapakita kapag pinindot ang Start/Esc button (Pokedex, Pokemon, Bag, Save) -->
-      <MainMenu v-if="currentGameState === 'MENU'" />
+      </div>
+
+      <MobileGamepad />
 
     </div>
+
   </main>
 </template>
 
 <style>
-/* CSS Reset para sakop buong screen */
 body, html {
   margin: 0;
   padding: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #000; /* Black borders kung hindi sakop buong screen */
+  background-color: #000; 
   overflow: hidden;
 }
 
 .app-container {
-  position: relative;
   width: 100vw;
   height: 100vh;
   display: flex;
@@ -63,26 +57,68 @@ body, html {
   align-items: center;
 }
 
-/* 
-  Napaka-importante ng klase na ito! 
-  Sinisiguro nito na ang UI ng Vue ay laging nasa ibabaw ng Phaser Canvas.
+/* EMULATOR LAYOUT:
+  Sa PC, gitna lang ang focus.
 */
+.emulator-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Eksaktong sukat ng game container sa PC. 
+*/
+.game-frame {
+  position: relative;
+  width: 800px;  
+  height: 600px; 
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 4 / 3; 
+  overflow: hidden;
+  background-color: transparent;
+}
+
 .ui-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 10; /* Laging nasa ibabaw ng canvas */
+  z-index: 10; 
   display: flex;
   flex-direction: column;
 }
 
-/* 
-  Kung naglalakad lang ang player ('EXPLORING'), hindi dapat harangin 
-  ng invisible UI container ang mouse clicks papunta sa Phaser.
-*/
 .pointer-events-none {
   pointer-events: none; 
+}
+
+/* =========================================
+   MOBILE MEDIA QUERY (EMULATOR SPLIT)
+   ========================================= */
+@media (max-width: 768px) {
+  .app-container {
+    /* I-push pataas ang buong layout imbes na naka-center */
+    align-items: flex-start; 
+  }
+  
+  .emulator-layout {
+    /* Punuin ang buong screen ng mobile */
+    width: 100vw;
+    height: 100vh;
+    justify-content: flex-start; 
+  }
+
+  .game-frame {
+    /* Sa mobile, kukunin ng game frame ang itaas na 60% ng screen */
+    width: 100vw;
+    height: 60vh;
+    max-height: 60vh; /* I-override ang desktop settings */
+    aspect-ratio: auto; /* Tanggalin ang fixed aspect ratio para sumakto sa 60vh div */
+  }
 }
 </style>
