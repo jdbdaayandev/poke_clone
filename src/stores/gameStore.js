@@ -4,11 +4,12 @@ import { defineStore } from 'pinia';
 export const useGameStore = defineStore('game', {
   state: () => ({
     isMenuOpen: false,
-    // Dinagdag natin ang 'START_SCREEN' sa mga posibleng state
-    // At ginawa natin itong default na state kapag nag-load ang page
-    currentGameState: 'START_SCREEN', 
+    
+    // Default state pagka-load ng laro
+    // Flow ng laro: START_SCREEN -> MAIN_MENU -> LOADING -> EXPLORING
+    currentGameState: 'INTRO',
 
-    // BAGONG STATE PARA SA MOBILE CONTROLS
+    // Mobile D-Pad configuration
     keys: {
       up: false,
       down: false,
@@ -17,10 +18,25 @@ export const useGameStore = defineStore('game', {
     }
   }),
   actions: {
-    // Bagong action para mag-umpisa ang laro
+    goToStartScreen() {
+      this.currentGameState = 'START_SCREEN';
+    },
+    // 1. Lilipat mula Start Screen papuntang Classic Selection (New Game, Load Game)
+    goToMainMenu() {
+      this.currentGameState = 'MAIN_MENU';
+    },
+
+    // 2. Lilipat mula Main Menu papuntang Loading Screen na may Pikachu
+    startLoading() {
+      this.currentGameState = 'LOADING';
+    },
+
+    // 3. Tapos na ang loading, pasok na sa overworld map
     startGame() {
       this.currentGameState = 'EXPLORING';
     },
+
+    // --- MGA EXISTING ACTIONS MO ---
     startBattle() {
       this.currentGameState = 'BATTLING';
     },
@@ -33,7 +49,8 @@ export const useGameStore = defineStore('game', {
     closeMenu() {
       this.currentGameState = 'EXPLORING';
     },
-    // PANG-UPDATE NG MOBILE BUTTONS
+
+    // Pang-update ng controls mula sa MobileGamepad.vue
     setKey(keyName, isPressed) {
       this.keys[keyName] = isPressed;
     }
