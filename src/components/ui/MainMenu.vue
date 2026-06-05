@@ -1,22 +1,90 @@
 <template>
-  <div class="main-menu">
-    <ul>
-      <li>Pokédex</li>
-      <li>Pokémon</li>
-      <li>Bag</li>
-      <li>Save</li>
-    </ul>
+  <div v-if="store.currentGameState === 'MAIN_MENU'" class="main-menu-container">
+    <div class="menu-box">
+      <ul>
+        <!-- Nagdagdag ng mouseover at click listeners para sa touch/mouse layout -->
+        <li 
+          v-for="(option, index) in options" 
+          :key="index" 
+          :class="{ active: selectedIndex === index }"
+          @mouseover="selectedIndex = index"
+          @pointerdown.stop="clickOption(index)"
+        >
+          <span v-if="selectedIndex === index" class="cursor">▶</span>
+          <span v-else class="spacer">&nbsp;&nbsp;</span>
+          {{ option }}
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useGameStore } from '../../stores/gameStore';
+
+const store = useGameStore();
+const options = ['NEW GAME', 'LOAD GAME', 'OPTION'];
+const selectedIndex = ref(0);
+
+// Keyboard controls handler
+const handleKeys = (e) => {
+  if (store.currentGameState !== 'MAIN_MENU') return;
+  if (e.key === 'ArrowUp') {
+    selectedIndex.value = selectedIndex.value > 0 ? selectedIndex.value - 1 : options.length - 1;
+  } else if (e.key === 'ArrowDown') {
+    selectedIndex.value = selectedIndex.value < options.length - 1 ? selectedIndex.value + 1 : 0;
+  } else if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
+    executeSelection();
+  }
+};
+
+// Touch o Mouse Click handler
+const clickOption = (index) => {
+  selectedIndex.value = index;
+  executeSelection();
+};
+
+const executeSelection = () => {
+  const choice = options[selectedIndex.value];
+  
+  if (choice === 'NEW GAME') {
+    store.startLoading(); // Lilipat sa Pikachu screen
+    
+    // 3 seconds fake loading delay
+    setTimeout(() => {
+      store.startGame(); // Pasok sa Overworld map!
+      if (window.phaserGame) {
+        const currentScene = window.phaserGame.scene.getScenes(true)[0];
+        if (currentScene) currentScene.scene.start('OverworldScene');
+      }
+    }, 3000);
+  } else {
+    alert("Pinili mo ang: " + choice + " (Wala pa itong function)");
+  }
+};
+
+onMounted(() => window.addEventListener('keydown', handleKeys));
+onUnmounted(() => window.removeEventListener('keydown', handleKeys));
+</script>
+
 <style scoped>
-.main-menu {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: white;
-  border: 3px solid black;
-  padding: 10px;
-  list-style: none;
+.main-menu-container {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #1d7a5b; display: flex; justify-content: center; align-items: center; z-index: 2900;
 }
+.menu-box {
+  background: #3e5f7a; border: 4px solid #ffffff; border-radius: 8px;
+  padding: 20px 30px; min-width: 220px; box-shadow: 4px 4px 0px #000;
+  user-select: none;
+}
+ul { list-style: none; padding: 0; margin: 0; }
+li { 
+  color: white; font-family: 'Courier New', Courier, monospace; font-size: 24px; 
+  padding: 8px 0; font-weight: bold; cursor: pointer; transition: padding-left 0.1s ease;
+}
+li:hover { color: #ffcc00; padding-left: 5px; } /* Swabe effect kapag tinutukan ng mouse */
+.cursor { color: #ffcc00; margin-right: 10px; }
+.spacer { display: inline-block; width: 24px; }
+.active { color: #ffcc00 !important; }
 </style>

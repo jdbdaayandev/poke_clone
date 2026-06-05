@@ -1,9 +1,12 @@
 <template>
-  <!-- Ipapakita lang ito kapag ang state ay START_SCREEN -->
-  <div v-if="store.currentGameState === 'START_SCREEN'" class="start-screen-container">
+  <div v-if="store.currentGameState === 'START_SCREEN'" class="start-screen-container" @pointerdown="handleInput">
     <div class="title-box">
-      <h1>POKÉMON CLONE</h1>
-      <p class="blink-text">Press ENTER to Start</p>
+      <div class="logo-wrapper">
+        <!-- POKÉMON VUE SCREEN -->
+        <h1 class="pokemon-logo">POKÉMON</h1>
+        <h2 class="version-logo">VUE VERSION</h2>
+      </div>
+      <p class="blink-text">TOUCH SCREEN OR PRESS ANY KEY</p>
     </div>
   </div>
 </template>
@@ -14,64 +17,33 @@ import { useGameStore } from '../../stores/gameStore';
 
 const store = useGameStore();
 
-const handleKeys = (e) => {
-  // Tatakbo lang ito kung nasa Title Screen tayo
+const handleInput = () => {
   if (store.currentGameState !== 'START_SCREEN') return;
-
-  if (e.key === 'Enter' || e.key === 'z' || e.key === 'Z') {
-    // 1. Palitan ang Pinia State papuntang 'EXPLORING'
-    store.startGame();
-    
-    // 2. Hanapin ang Phaser game instance at ilipat ang Scene papuntang Overworld
-    const phaserGame = window.phaserGame; // (Kailangan nating i-set ito sa wrapper mamaya)
-    if (phaserGame) {
-      // Pinapatay muna ang MainMenuScene (kung meron) at bubuksan ang mapa
-      const currentScene = phaserGame.scene.getScenes(true)[0];
-      if (currentScene) {
-        currentScene.scene.start('OverworldScene');
-      }
-    }
-  }
+  store.goToMainMenu(); 
 };
 
-onMounted(() => window.addEventListener('keydown', handleKeys));
-onUnmounted(() => window.removeEventListener('keydown', handleKeys));
+onMounted(() => window.addEventListener('keydown', handleInput));
+onUnmounted(() => window.removeEventListener('keydown', handleInput));
 </script>
 
 <style scoped>
 .start-screen-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: #1d7a5b; /* Emerald Green */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(135deg, #1d7a5b, #0d4d36, #228b22);
+  background-size: 400% 400%;
+  animation: gradientBG 8s ease infinite;
+  display: flex; justify-content: center; align-items: center; z-index: 3000;
+  cursor: pointer;
 }
-
-.title-box {
-  text-align: center;
-  color: white;
-  font-family: 'Courier New', Courier, monospace;
+.title-box { text-align: center; font-family: 'Courier New', Courier, monospace; user-select: none; }
+.logo-wrapper { animation: floatLogo 3s ease-in-out infinite; margin-bottom: 50px; }
+.pokemon-logo {
+  font-size: 58px; color: #ffcc00; font-weight: 900; letter-spacing: 2px;
+  stroke: #365fa9; -webkit-text-stroke: 4px #365fa9; text-shadow: 4px 4px 0px #000; margin: 0;
 }
-
-h1 {
-  font-size: 48px;
-  text-shadow: 4px 4px 0px #000;
-  margin-bottom: 20px;
-}
-
-.blink-text {
-  font-size: 24px;
-  color: #ffcc00;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
+.version-logo { font-size: 26px; color: #00ffcc; font-style: italic; margin-top: -5px; text-shadow: 2px 2px 0px #000; font-weight: bold; }
+.blink-text { font-size: 18px; color: #ffffff; font-weight: bold; animation: retroBlink 0.8s steps(2, start) infinite; text-shadow: 1px 1px 2px #000; }
+@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes floatLogo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes retroBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 </style>
