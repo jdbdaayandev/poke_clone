@@ -2,7 +2,13 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import Phaser from 'phaser';
 import BootScene from '../game/scenes/BootScene';
+import MainMenuScene from '../game/scenes/MainMenuScene';
 import OverworldScene from '../game/scenes/OverworldScene';
+
+// 1. GINAMIT NATIN ANG StartScreen DAHIL ITO ANG NASA FOLDER MO
+import StartScreen from './ui/StartScreen.vue'; 
+import PartyMenu from './ui/PartyMenu.vue';
+import MobileGamepad from './ui/MobileGamepad.vue';
 
 const gameContainer = ref(null);
 let game = null;
@@ -16,7 +22,6 @@ onMounted(() => {
     backgroundColor: '#000000',
     pixelArt: true, 
     
-    // 1. IDAGDAG ITO PARA MATIGIL ANG AUDIO CONTEXT ERROR
     audio: {
       noAudio: true 
     },
@@ -28,10 +33,11 @@ onMounted(() => {
         debug: true 
       }
     },
-    scene: [BootScene, OverworldScene]
+    scene: [BootScene, MainMenuScene, OverworldScene]
   };
   
   game = new Phaser.Game(config);
+  window.phaserGame = game;
 });
 
 onUnmounted(() => {
@@ -40,13 +46,48 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="gameContainer" class="game-container"></div>
+  <div class="app-wrapper">
+    
+    <div ref="gameContainer" class="game-container"></div>
+
+    <div class="ui-layer">
+      <!-- 2. TINAWAG NATIN ANG StartScreen at PartyMenu DITO -->
+      <StartScreen />
+      <PartyMenu />
+      <MobileGamepad />
+    </div>
+
+  </div>
 </template>
 
 <style scoped>
+/* Ang wrapper ay dapat relative para hindi lumagpas sa screen yung mga menus */
+.app-wrapper {
+  position: relative;
+  width: 800px; 
+  height: 600px; 
+  margin: 0 auto; 
+}
+
+/* Walang babaguhin sa laro mismo */
 .game-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* 3. ITO ANG NAGPAPALUTANG SA UI SA IBABAW NG LARO */
+.ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; 
+  z-index: 10; 
+}
+
+/* Para ma-click at gumana yung mismong menu natin */
+.ui-layer > * {
+  pointer-events: auto;
 }
 </style>
