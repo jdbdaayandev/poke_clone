@@ -1,8 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import Phaser from 'phaser';
-
-// 1. I-import ang mga scenes na ginawa natin
 import BootScene from '../game/scenes/BootScene';
 import OverworldScene from '../game/scenes/OverworldScene';
 
@@ -16,11 +14,20 @@ onMounted(() => {
     height: 600,
     parent: gameContainer.value,
     backgroundColor: '#000000',
-    pixelArt: true, // Importante ito para malinaw ang Pokemon sprites
+    pixelArt: true, 
     
-    // 2. DITO ANG PAGBABAGO: Imbes na yung function na nagpi-print 
-    // ng green text, ilalagay na natin dito ang Array ng scenes mo.
-    // Ang unang nasa listahan (BootScene) ang unang mag-ra-run.
+    // 1. IDAGDAG ITO PARA MATIGIL ANG AUDIO CONTEXT ERROR
+    audio: {
+      noAudio: true 
+    },
+
+    physics: {
+      default: 'arcade', 
+      arcade: {
+        gravity: { y: 0 }, 
+        debug: true 
+      }
+    },
     scene: [BootScene, OverworldScene]
   };
   

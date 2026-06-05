@@ -2,16 +2,20 @@
 import { Scene } from 'phaser';
 
 export default class BootScene extends Scene {
-  constructor() { 
-    super('BootScene'); 
-  }
+  constructor() { super('BootScene'); }
 
   preload() {
-    // TANGGALIN ang unang slash '/' sa path!
-    this.load.image('pokemon_tiles', 'assets/tilesets/pokemon_exterior.png');
-    
-    // TANGGALIN ang unang slash '/' sa path!
-    this.load.tilemapTiledJSON('pallet_town', 'assets/tilesets/pallet_town.json');
+    const tilesetUrl = new URL('/assets/tilesets/pokemon_exterior.png', import.meta.url).href;
+    const mapUrl = new URL('/assets/tilesets/pallet_town.json', import.meta.url).href;
+    const playerUrl = new URL('/assets/sprites/player.png', import.meta.url).href;
+
+    this.load.image('pokemon_tiles', tilesetUrl);
+    this.load.tilemapTiledJSON('pallet_town', mapUrl);
+
+    this.load.spritesheet('hero', playerUrl, {
+      frameWidth: 32, 
+      frameHeight: 32 
+    });
   }
 
   create() {
