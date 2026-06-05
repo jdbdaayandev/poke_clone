@@ -1,5 +1,6 @@
 // src/game/entities/Player.js
 import Phaser from 'phaser';
+import { useGameStore } from '../../stores/gameStore';
 
 export default class Player extends Phaser.GameObjects.Sprite {
   constructor(scene, x, y, collisionLayer) {
@@ -56,48 +57,37 @@ export default class Player extends Phaser.GameObjects.Sprite {
     // Kung naglalakad pa, i-ignore ang inputs
     if (this.isMoving) return;
 
+    const store = useGameStore();
+
     let intendedDirection = null;
     let targetX = this.x;
     let targetY = this.y;
 
-    // Kunin kung aling key ang pinindot at i-set ang target grid
-    if (this.cursors.left.isDown) { 
-      intendedDirection = 'left'; 
-      targetX -= this.tileSize; 
-    } 
-    else if (this.cursors.right.isDown) { 
-      intendedDirection = 'right'; 
-      targetX += this.tileSize; 
-    } 
-    else if (this.cursors.up.isDown) { 
-      intendedDirection = 'up'; 
-      targetY -= this.tileSize; 
-    } 
-    else if (this.cursors.down.isDown) { 
-      intendedDirection = 'down'; 
-      targetY += this.tileSize; 
-    }
+   // Basahin parehas ang KEYBOARD at MOBILE D-PAD (store.keys)
+    if (this.cursors.left.isDown || store.keys.left) intendedDirection = 'left';
+    else if (this.cursors.right.isDown || store.keys.right) intendedDirection = 'right';
+    else if (this.cursors.up.isDown || store.keys.up) intendedDirection = 'up';
+    else if (this.cursors.down.isDown || store.keys.down) intendedDirection = 'down';
 
-    // Kapag may pinindot na arrow key
+    // (Ipagpatuloy ang existing na movement code mo sa baba...)
+    if (intendedDirection === 'left') targetX -= this.tileSize;
+    else if (intendedDirection === 'right') targetX += this.tileSize;
+    else if (intendedDirection === 'up') targetY -= this.tileSize;
+    else if (intendedDirection === 'down') targetY += this.tileSize;
+
     if (intendedDirection) {
-      // Kapag iba yung pinindot mo sa kasalukuyang direksyon (Turning phase)
       if (this.currentDirection !== intendedDirection) {
         this.currentDirection = intendedDirection;
-        this.faceDirection(this.currentDirection); // Haharap lang, walang lakad
-        
-        // I-set ang timer bago siya payagan maglakad
+        this.faceDirection(this.currentDirection); 
         this.moveDelayTimer = this.scene.time.now + this.turnDelay;
       } 
-      // Kapag nakaharap na siya sa tamang direksyon (Walking phase)
       else {
-        // I-check kung tapos na yung delay
         if (this.scene.time.now >= this.moveDelayTimer) {
           this.play(`walk-${this.currentDirection}`, true);
           this.tryMoveTo(targetX, targetY);
         }
       }
     } else {
-      // Kapag binitiwan ang controls
       this.stopAndIdle();
     }
   }
